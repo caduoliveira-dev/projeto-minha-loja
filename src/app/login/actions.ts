@@ -2,45 +2,38 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
 
 import { createClient } from '@/utils/supabase/server'
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
 
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
-  const data = {
+  // Extrair dados do formulário
+  const rawData = {
     email: formData.get('email') as string,
     password: formData.get('password') as string,
   }
+
+  // Validar dados com Zod
+  const validationResult = loginSchema.safeParse(rawData)
+  
+  if (!validationResult.success) {
+    const errors = validationResult.error.flatten().fieldErrors
+    const errorMessage = Object.values(errors)
+      .flat()
+      .join(', ')
+    throw new Error(errorMessage)
+  }
+
+  const data: LoginFormData = validationResult.data
 
   const { error } = await supabase.auth.signInWithPassword(data)
 
   if (error) {
-    redirect('/error')
+    throw new Error(error.message)
   }
 
   revalidatePath('/', 'layout')
-  redirect('/')
-}
-
-export async function signup(formData: FormData) {
-  const supabase = await createClient()
-
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
-  const data = {
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
-  }
-
-  const { error } = await supabase.auth.signUp(data)
-
-  if (error) {
-    redirect('/error')
-  }
-
-  revalidatePath('/', 'layout')
-  redirect('/')
+  redirect('/dashboard')
 }
