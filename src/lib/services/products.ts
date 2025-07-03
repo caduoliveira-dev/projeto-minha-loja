@@ -14,7 +14,10 @@ export class ProductService extends BaseService {
     
     const { data: product, error } = await supabase
       .from('products')
-      .insert(data)
+      .insert({
+        ...data,
+        active: true // Produtos criados são ativos por padrão
+      })
       .select()
       .single()
 
@@ -45,9 +48,13 @@ export class ProductService extends BaseService {
   async delete(id: string): Promise<void> {
     const supabase = await this.getClient()
     
+    // Exclusão lógica: setar active como false
     const { error } = await supabase
       .from('products')
-      .delete()
+      .update({ 
+        active: false,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', id)
 
     if (error) {
@@ -83,6 +90,7 @@ export class ProductService extends BaseService {
     let query = supabase
       .from('products')
       .select('*')
+      .eq('active', true) // Apenas produtos ativos
       .order('created_at', { ascending: false })
 
     // Aplicar filtros

@@ -11,6 +11,7 @@ export interface Product {
   sale_price: number
   stock_quantity: number
   moves_stock: boolean
+  active: boolean
   created_at: string
   updated_at: string
 }

@@ -18,9 +18,13 @@ export class BaseService {
     const from = (page - 1) * limit
     const to = from + limit - 1
 
+    // Aplicar paginação na query
+    const paginatedQuery = query.range(from, to)
+    
+    // Fazer duas queries: uma para os dados e outra para o total
     const [dataResult, countResult] = await Promise.all([
-      query.range(from, to),
-      query.count()
+      paginatedQuery,
+      query.select('*', { count: 'exact', head: true })
     ])
 
     if (dataResult.error) {
