@@ -18,25 +18,15 @@ export class BaseService {
     const from = (page - 1) * limit
     const to = from + limit - 1
 
-    // Aplicar paginação na query
-    const paginatedQuery = query.range(from, to)
-    
-    // Fazer duas queries: uma para os dados e outra para o total
-    const [dataResult, countResult] = await Promise.all([
-      paginatedQuery,
-      query.select('*', { count: 'exact', head: true })
-    ])
-
-    if (dataResult.error) {
-      throw new Error(dataResult.error.message)
-    }
-
-    if (countResult.error) {
-      throw new Error(countResult.error.message)
-    }
-
+    // 1. Fazer o count antes de qualquer select de join
+    const countResult = await query.select('*', { count: 'exact', head: true })
+    if (countResult.error) throw new Error(countResult.error.message)
     const total = countResult.count || 0
     const totalPages = Math.ceil(total / limit)
+
+    // 2. Buscar os dados paginados (sem join)
+    const dataResult = await query.range(from, to)
+    if (dataResult.error) throw new Error(dataResult.error.message)
 
     return {
       data: dataResult.data || [],

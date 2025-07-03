@@ -81,32 +81,67 @@ export class ProductService extends BaseService {
     return product
   }
 
+  async findByIdWithCategory(id: string): Promise<Product | null> {
+    const supabase = await this.getClient()
+    const { data: product, error } = await supabase
+      .from('products')
+      .select('*, category:categories(id, name, color)')
+      .eq('id', id)
+      .single()
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null // Produto não encontrado
+      }
+      return this.handleError(error)
+    }
+    return product
+  }
+
   async findAll(
     filters: ProductFilters = {},
     pagination: PaginationParams = { page: 1, limit: 20 }
   ): Promise<PaginatedResponse<Product>> {
     const supabase = await this.getClient()
     
+    // 1. Montar a query com filtros, mas sem o select do join
     let query = supabase
-    .from('products')
-    .select(`*, category:categories(id, name, color)`)
-    .eq('active', true)
-    .order('created_at', { ascending: false })
+      .from('products')
+      .select('*')
+      .eq('active', true)
+      .order('created_at', { ascending: false })
 
     // Aplicar filtros
     if (filters.search) {
       query = query.ilike('name', `%${filters.search}%`)
     }
-
     if (filters.moves_stock !== undefined) {
       query = query.eq('moves_stock', filters.moves_stock)
     }
-
     if (filters.low_stock) {
-      query = query.lt('stock_quantity', 10) // Produtos com menos de 10 unidades
+      query = query.lt('stock_quantity', 10)
     }
 
-    return this.paginate(query, pagination)
+    // 2. Paginar (sem join)
+    const paginated = await this.paginate(query, pagination)
+
+    // 3. Buscar os dados paginados (por id) com select do join
+    const ids = paginated.data.map((p: any) => p.id)
+    if (ids.length === 0) {
+      return { ...paginated, data: [] }
+    }
+    const { data: productsWithCategory, error } = await supabase
+      .from('products')
+      .select('*, category:categories(id, name, color)')
+      .in('id', ids)
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    // 4. Reordenar para manter a ordem original dos ids
+    const productsOrdered = ids.map(id => productsWithCategory.find((p: any) => p.id === id))
+
+    return { ...paginated, data: productsOrdered }
   }
 
   async findLowStock(limit: number = 10): Promise<Product[]> {

@@ -6,7 +6,7 @@ import { Package, Plus } from 'lucide-react'
 import { ProductTable, ProductDialog, DeleteProductDialog } from '@/components/products'
 import { Product, CreateProductData, Category } from '@/lib/types/business'
 import { toast } from 'sonner'
-import { createProduct, updateProduct, deleteProduct } from './actions'
+import { createProduct, updateProduct, deleteProduct, getProductById } from './actions'
 
 interface ProductsClientProps {
   initialProducts: Product[]
@@ -29,14 +29,17 @@ export function ProductsClient({ initialProducts, initialCategories }: ProductsC
         // Atualizar produto existente
         const result = await updateProduct(editingProduct.id, data)
         if (result.success) {
-          // Atualizar lista local
-          setProducts(prev => 
-            prev.map(p => 
-              p.id === editingProduct.id 
-                ? { ...p, ...data }
-                : p
+          // Buscar o produto atualizado do backend (com join da categoria)
+          const refreshed = await getProductById(editingProduct.id)
+          if (refreshed.success && refreshed.data) {
+            setProducts(prev =>
+              prev.map(p =>
+                p.id === editingProduct.id && refreshed.data
+                  ? refreshed.data // produto atualizado com categoria
+                  : p
+              ) as Product[]
             )
-          )
+          }
         } else {
           throw new Error(result.error)
         }

@@ -56,4 +56,14 @@ export async function getActiveCategories() {
     console.error('Erro ao carregar categorias:', error)
     return { success: false, error: 'Erro ao carregar categorias', data: [] }
   }
+}
+
+export async function getProductById(id: string) {
+  try {
+    const product = await productService.findByIdWithCategory(id)
+    return { success: true, data: product }
+  } catch (error) {
+    console.error('Erro ao buscar produto:', error)
+    return { success: false, error: 'Erro ao buscar produto', data: null }
+  }
 } 
