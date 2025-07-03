@@ -1,7 +1,20 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import { Button } from '@/components/ui/button'
-import { LogOut, User, Phone, Mail } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { 
+  TrendingUp, 
+  DollarSign, 
+  Package, 
+  AlertTriangle,
+  Calendar,
+  BarChart3,
+  ShoppingCart,
+  Users,
+  FileText,
+  CreditCard
+} from 'lucide-react'
+import { DashboardService } from '@/lib/services/dashboard'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -12,98 +25,272 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
-  // Buscar dados do perfil da tabela profiles (criado pelo trigger)
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
+  // Buscar estatísticas do dashboard
+  const dashboardService = new DashboardService()
+  const stats = await dashboardService.getDashboardStats()
+  const financialSummary = await dashboardService.getFinancialSummary()
+  const lowStockAlerts = await dashboardService.getLowStockAlerts()
+  const upcomingDueDates = await dashboardService.getUpcomingDueDates(7) // Próximos 7 dias
 
-  const handleSignOut = async () => {
-    'use server'
-    const supabase = await createClient()
-    await supabase.auth.signOut()
-    redirect('/login')
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value)
+  }
+
+  const formatDate = (date: string) => {
+    return new Intl.DateTimeFormat('pt-BR').format(new Date(date))
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="bg-white shadow rounded-lg mb-8">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-              <form action={handleSignOut}>
-                <Button
-                  type="submit"
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Sair
-                </Button>
-              </form>
-            </div>
-          </div>
+    <div className="px-8">
+      <div className="">
+        {/* KPIs Principais */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total de Vendas</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(stats.totalSales)}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.totalSalesCount} vendas realizadas
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Lucro Bruto</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(stats.totalProfit)}</div>
+              <p className="text-xs text-muted-foreground">
+                Margem estimada
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Saldo Atual</CardTitle>
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${stats.currentBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatCurrency(stats.currentBalance)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Receitas - Despesas
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Produtos em Baixa</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600">{stats.lowStockProducts}</div>
+              <p className="text-xs text-muted-foreground">
+                Estoque abaixo de 10 unidades
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Profile Card */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Perfil do Usuário</h2>
-          </div>
-          
-          <div className="p-6">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <User className="h-5 w-5 text-gray-400" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Nome</p>
-                  <p className="text-lg text-gray-900">
-                    {profile?.name || user.user_metadata?.display_name || 'Não informado'}
-                  </p>
-                </div>
+        {/* Resumo Financeiro */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Contas a Pagar
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">
+                {formatCurrency(financialSummary.totalPayables)}
               </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                {financialSummary.overdueAmount > 0 && (
+                  <span className="text-red-500">
+                    {formatCurrency(financialSummary.overdueAmount)} vencidos
+                  </span>
+                )}
+              </p>
+            </CardContent>
+          </Card>
 
-              <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-gray-400" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Email</p>
-                  <p className="text-lg text-gray-900">{user.email}</p>
-                </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Contas a Receber
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                {formatCurrency(financialSummary.totalReceivables)}
               </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Valores pendentes
+              </p>
+            </CardContent>
+          </Card>
 
-              <div className="flex items-center gap-3">
-                <Phone className="h-5 w-5 text-gray-400" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Telefone</p>
-                  <p className="text-lg text-gray-900">
-                    {profile?.phone || user.user_metadata?.phone || 'Não informado'}
-                  </p>
-                </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Saldo Líquido
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${financialSummary.netBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatCurrency(financialSummary.netBalance)}
               </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Receber - Pagar
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
-              {profile?.created_at && (
-                <div className="pt-4 border-t border-gray-200">
-                  <p className="text-sm text-gray-500">
-                    Membro desde: {new Date(profile.created_at).toLocaleDateString('pt-BR')}
-                  </p>
+        {/* Alertas e Próximos Vencimentos */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Produtos com Estoque Baixo */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Produtos com Estoque Baixo
+              </CardTitle>
+              <CardDescription>
+                Produtos que precisam de reposição
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {lowStockAlerts.length > 0 ? (
+                <div className="space-y-3">
+                  {lowStockAlerts.slice(0, 5).map((product) => (
+                    <div key={product.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">{product.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {product.stock_quantity} unidades restantes
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">{formatCurrency(product.stock_value)}</p>
+                        <p className="text-xs text-muted-foreground">Valor em estoque</p>
+                      </div>
+                    </div>
+                  ))}
+                  {lowStockAlerts.length > 5 && (
+                    <p className="text-sm text-muted-foreground text-center">
+                      +{lowStockAlerts.length - 5} produtos com estoque baixo
+                    </p>
+                  )}
                 </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Nenhum produto com estoque baixo
+                </p>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
+
+          {/* Próximos Vencimentos */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Próximos Vencimentos
+              </CardTitle>
+              <CardDescription>
+                Contas que vencem nos próximos 7 dias
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {upcomingDueDates.length > 0 ? (
+                <div className="space-y-3">
+                  {upcomingDueDates.slice(0, 5).map((item, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">{item.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.type === 'payable' ? 'Conta a pagar' : 'Conta a receber'}
+                          {item.customer_name && ` - ${item.customer_name}`}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">{formatCurrency(item.amount)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Vence em {formatDate(item.due_date)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {upcomingDueDates.length > 5 && (
+                    <p className="text-sm text-muted-foreground text-center">
+                      +{upcomingDueDates.length - 5} contas próximas do vencimento
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Nenhuma conta próxima do vencimento
+                </p>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Welcome Message */}
-        <div className="mt-8 bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Bem-vindo, {profile?.name || user.user_metadata?.display_name || user.email}!
-          </h3>
-          <p className="text-gray-600">
-            Esta é sua área pessoal. Aqui você poderá gerenciar suas informações e acessar os recursos da plataforma.
-          </p>
-        </div>
+        {/* Menu de Navegação Rápida */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Navegação Rápida</CardTitle>
+            <CardDescription>
+              Acesse rapidamente as principais funcionalidades
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Button variant="outline" className="h-20 flex flex-col gap-2" asChild>
+                <a href="/sales/new">
+                  <ShoppingCart className="h-6 w-6" />
+                  <span className="text-sm">Nova Venda</span>
+                </a>
+              </Button>
+              
+              <Button variant="outline" className="h-20 flex flex-col gap-2" asChild>
+                <a href="/products">
+                  <Package className="h-6 w-6" />
+                  <span className="text-sm">Produtos</span>
+                </a>
+              </Button>
+              
+              <Button variant="outline" className="h-20 flex flex-col gap-2" asChild>
+                <a href="/customers">
+                  <Users className="h-6 w-6" />
+                  <span className="text-sm">Clientes</span>
+                </a>
+              </Button>
+              
+              <Button variant="outline" className="h-20 flex flex-col gap-2" asChild>
+                <a href="/reports">
+                  <FileText className="h-6 w-6" />
+                  <span className="text-sm">Relatórios</span>
+                </a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
