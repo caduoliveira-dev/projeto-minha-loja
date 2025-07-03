@@ -10,6 +10,8 @@ export default async function ProductsPage() {
   const products = productsResult.success ? productsResult.data : []
   const categories = categoriesResult.success ? categoriesResult.data : []
 
+  console.log(products)
+
   return (
     <div className="px-8">
       <ProductsClient initialProducts={products} initialCategories={categories} />

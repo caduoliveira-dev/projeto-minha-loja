@@ -88,13 +88,10 @@ export class ProductService extends BaseService {
     const supabase = await this.getClient()
     
     let query = supabase
-      .from('products')
-      .select(`
-        *,
-        category:categories(id, name, color)
-      `)
-      .eq('active', true) // Apenas produtos ativos
-      .order('created_at', { ascending: false })
+    .from('products')
+    .select(`*, category:categories(id, name, color)`)
+    .eq('active', true)
+    .order('created_at', { ascending: false })
 
     // Aplicar filtros
     if (filters.search) {
