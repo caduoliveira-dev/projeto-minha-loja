@@ -74,11 +74,11 @@ export default function LoginPage() {
               </a>
             </div>
           </form>
-          <div className="bg-muted relative hidden md:block">
+          <div className="flex items-center justify-center">
             <img
-              src="/placeholder.svg"
+              src="/logo.png"
               alt="Image"
-              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+              className="w-48 h-48"
             />
           </div>
         </CardContent>

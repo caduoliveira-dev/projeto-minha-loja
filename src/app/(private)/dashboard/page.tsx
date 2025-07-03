@@ -15,6 +15,8 @@ import {
   CreditCard
 } from 'lucide-react'
 import { DashboardService } from '@/lib/services/dashboard'
+import { formatDate } from '@/utils/globals/date'
+import { formatCurrency } from '@/utils/globals/money'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -25,23 +27,11 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
-  // Buscar estatísticas do dashboard
   const dashboardService = new DashboardService()
   const stats = await dashboardService.getDashboardStats()
   const financialSummary = await dashboardService.getFinancialSummary()
   const lowStockAlerts = await dashboardService.getLowStockAlerts()
-  const upcomingDueDates = await dashboardService.getUpcomingDueDates(7) // Próximos 7 dias
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value)
-  }
-
-  const formatDate = (date: string) => {
-    return new Intl.DateTimeFormat('pt-BR').format(new Date(date))
-  }
+  const upcomingDueDates = await dashboardService.getUpcomingDueDates(7)
 
   return (
     <div className="px-8">
