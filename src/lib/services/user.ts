@@ -28,6 +28,19 @@ export class UserService extends BaseService {
       .eq('id', user.id)
       .single()
 
+    if (profileError) {
+      // Se não encontrar na tabela profiles, usar dados do metadata
+      return {
+        id: user.id,
+        name: user.user_metadata?.display_name || user.email?.split('@')[0] || 'Usuário',
+        email: user.email || '',
+        phone: user.user_metadata?.phone || '',
+        avatar_url: user.user_metadata?.avatar_url || '',
+        created_at: user.created_at || new Date().toISOString(),
+        updated_at: user.updated_at || new Date().toISOString(),
+      }
+    }
+
     return profile
   }
 

@@ -1,6 +1,7 @@
 "use client"
 
-import { ChevronRight, type LucideIcon } from "lucide-react"
+import * as React from "react"
+import { ChevronRight, Package, ShoppingCart, Users, CreditCard } from "lucide-react"
 
 import {
   Collapsible,
@@ -9,7 +10,6 @@ import {
 } from "@/components/ui/collapsible"
 import {
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuAction,
   SidebarMenuButton,
@@ -19,13 +19,20 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 
+// Mapeamento de ícones por título
+const iconMap = {
+  "Produtos": Package,
+  "Vendas": ShoppingCart,
+  "Clientes": Users,
+  "Financeiro": CreditCard,
+}
+
 export function NavMain({
   items,
 }: {
   items: {
     title: string
     url: string
-    icon: LucideIcon
     isActive?: boolean
     items?: {
       title: string
@@ -41,7 +48,10 @@ export function NavMain({
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip={item.title}>
                 <a href={item.url}>
-                  <item.icon />
+                  {(() => {
+                    const IconComponent = iconMap[item.title as keyof typeof iconMap]
+                    return IconComponent ? <IconComponent /> : null
+                  })()}
                   <span>{item.title}</span>
                 </a>
               </SidebarMenuButton>

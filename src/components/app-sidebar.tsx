@@ -1,26 +1,9 @@
-"use client"
-
 import * as React from "react"
 import {
-  BookOpen,
-  Bot,
   Command,
-  CreditCard,
-  Frame,
-  LifeBuoy,
-  Map,
-  Package,
-  PieChart,
-  Send,
-  Settings2,
-  ShoppingCart,
-  SquareTerminal,
-  Users,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
-import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
@@ -31,50 +14,53 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { userService } from "@/lib/services"
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+const navMain = [
+  {
+    title: "Produtos",
+    url: "/products",
   },
-  navMain: [
-    {
-      title: "Produtos",
-      url: "/products",
-      icon: Package,
-    },
-    {
-      title: "Vendas",
-      url: "/sales",
-      icon: ShoppingCart,
-    },
-    {
-      title: "Clientes",
-      url: "/customers",
-      icon: Users,
-    },
-    {
-      title: "Financeiro",
-      url: "#",
-      icon: CreditCard,
-      isActive: true,
-      items: [
-        {
-          title: "Contas a Pagar",
-          url: "/financial/payables",
-        },
-        {
-          title: "Contas a Receber",
-          url: "/financial/receivables",
-        }
-      ],
-    },
-  ],
+  {
+    title: "Vendas",
+    url: "/sales",
+  },
+  {
+    title: "Clientes",
+    url: "/customers",
+  },
+  {
+    title: "Financeiro",
+    url: "#",
+    isActive: true,
+    items: [
+      {
+        title: "Contas a Pagar",
+        url: "/financial/payables",
+      },
+      {
+        title: "Contas a Receber",
+        url: "/financial/receivables",
+      }
+    ],
+  },
+]
 
-}
+export async function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  // Buscar dados do usuário autenticado
+  const userProfile = await userService.getCurrentUser()
+  
+  // Dados do usuário para o componente NavUser
+  const userData = userProfile ? {
+    name: userProfile.name,
+    email: userProfile.email,
+    avatar: userProfile.avatar_url || "",
+  } : {
+    name: "Usuário",
+    email: "",
+    avatar: "",
+  }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -87,7 +73,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">Nome da Loja</span>
-                  <span className="truncate text-xs">21.234.567/0001-00</span>
+                  <span className="truncate text-xs">00.000.000/0000-00</span>
                 </div>
               </a>
             </SidebarMenuButton>
@@ -95,10 +81,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={userData} />
       </SidebarFooter>
     </Sidebar>
   )
