@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { productService } from '@/lib/services'
+import { productService, categoryService } from '@/lib/services'
 import { CreateProductData } from '@/lib/types/business'
 
 export async function createProduct(data: CreateProductData) {
@@ -45,5 +45,15 @@ export async function getProducts() {
   } catch (error) {
     console.error('Erro ao carregar produtos:', error)
     return { success: false, error: 'Erro ao carregar produtos', data: [] }
+  }
+}
+
+export async function getActiveCategories() {
+  try {
+    const categories = await categoryService.findActive()
+    return { success: true, data: categories }
+  } catch (error) {
+    console.error('Erro ao carregar categorias:', error)
+    return { success: false, error: 'Erro ao carregar categorias', data: [] }
   }
 } 

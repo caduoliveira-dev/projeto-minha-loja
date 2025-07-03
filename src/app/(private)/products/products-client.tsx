@@ -1,19 +1,21 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Package, Plus } from 'lucide-react'
 import { ProductTable, ProductDialog, DeleteProductDialog } from '@/components/products'
-import { Product, CreateProductData } from '@/lib/types/business'
+import { Product, CreateProductData, Category } from '@/lib/types/business'
 import { toast } from 'sonner'
 import { createProduct, updateProduct, deleteProduct } from './actions'
 
 interface ProductsClientProps {
   initialProducts: Product[]
+  initialCategories: Category[]
 }
 
-export function ProductsClient({ initialProducts }: ProductsClientProps) {
+export function ProductsClient({ initialProducts, initialCategories }: ProductsClientProps) {
   const [products, setProducts] = useState<Product[]>(initialProducts)
+  const [categories, setCategories] = useState<Category[]>(initialCategories)
   const [isLoading, setIsLoading] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
@@ -135,6 +137,7 @@ export function ProductsClient({ initialProducts }: ProductsClientProps) {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         product={editingProduct}
+        categories={categories}
         onSave={handleSaveProduct}
       />
 

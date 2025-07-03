@@ -2,7 +2,29 @@
 // TIPOS DO SISTEMA DE GESTÃO EMPRESARIAL
 // =====================================================
 
-// 1. PRODUTOS
+// 1. CATEGORIAS
+export interface Category {
+  id: string
+  name: string
+  description?: string
+  color?: string
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateCategoryData {
+  name: string
+  description?: string
+  color?: string
+  active: boolean
+}
+
+export interface UpdateCategoryData extends Partial<CreateCategoryData> {
+  id: string
+}
+
+// 2. PRODUTOS
 export interface Product {
   id: string
   name: string
@@ -12,6 +34,8 @@ export interface Product {
   stock_quantity: number
   moves_stock: boolean
   active: boolean
+  category_id?: string
+  category?: Category
   created_at: string
   updated_at: string
 }
@@ -23,6 +47,7 @@ export interface CreateProductData {
   sale_price: number
   stock_quantity: number
   moves_stock: boolean
+  category_id?: string
 }
 
 export interface UpdateProductData extends Partial<CreateProductData> {

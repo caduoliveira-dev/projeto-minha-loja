@@ -1,13 +1,18 @@
 import { ProductsClient } from './products-client'
-import { getProducts } from './actions'
+import { getProducts, getActiveCategories } from './actions'
 
 export default async function ProductsPage() {
-  const productsResult = await getProducts()
+  const [productsResult, categoriesResult] = await Promise.all([
+    getProducts(),
+    getActiveCategories()
+  ])
+  
   const products = productsResult.success ? productsResult.data : []
+  const categories = categoriesResult.success ? categoriesResult.data : []
 
   return (
     <div className="px-8">
-      <ProductsClient initialProducts={products} />
+      <ProductsClient initialProducts={products} initialCategories={categories} />
     </div>
   )
 } 

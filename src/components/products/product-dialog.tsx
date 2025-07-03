@@ -17,12 +17,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
-import { Product, CreateProductData } from "@/lib/types/business"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Product, CreateProductData, Category } from "@/lib/types/business"
 
 interface ProductDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   product?: Product | null
+  categories: Category[]
   onSave: (data: CreateProductData) => Promise<void>
 }
 
@@ -30,6 +32,7 @@ export function ProductDialog({
   open, 
   onOpenChange, 
   product, 
+  categories,
   onSave 
 }: ProductDialogProps) {
   const [isLoading, setIsLoading] = useState(false)
@@ -40,6 +43,7 @@ export function ProductDialog({
     sale_price: 0,
     stock_quantity: 0,
     moves_stock: true,
+    category_id: undefined,
   })
 
   // Reset form when dialog opens/closes or product changes
@@ -54,6 +58,7 @@ export function ProductDialog({
           sale_price: product.sale_price,
           stock_quantity: product.stock_quantity,
           moves_stock: product.moves_stock,
+          category_id: product.category_id,
         })
       } else {
         // Create mode
@@ -64,6 +69,7 @@ export function ProductDialog({
           sale_price: 0,
           stock_quantity: 0,
           moves_stock: true,
+          category_id: undefined,
         })
       }
     }
@@ -162,6 +168,33 @@ export function ProductDialog({
               placeholder="Descrição detalhada do produto..."
               rows={3}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="category">Categoria</Label>
+            <Select
+              value={formData.category_id || ""}
+              onValueChange={(value) => handleInputChange("category_id", value || "")}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    <div className="flex items-center gap-2">
+                      {category.color && (
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: category.color }}
+                        />
+                      )}
+                      {category.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

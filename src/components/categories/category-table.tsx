@@ -1,22 +1,33 @@
-"use client"
+'use client'
 
-import * as React from "react"
+import { useState } from 'react'
 import {
   ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Package, Search } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+  getSortedRowModel,
+  SortingState,
+  getPaginationRowModel,
+  getFilteredRowModel,
+  ColumnFiltersState,
+  VisibilityState,
+} from '@tanstack/react-table'
+import { Category } from '@/lib/types/business'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Edit, Trash2, ChevronDown, ChevronUp, MoreHorizontal, ArrowUpDown, Search } from 'lucide-react'
+import { DeleteCategoryDialog } from './delete-category-dialog'
+import { CategoryDialog } from './category-dialog'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -26,38 +37,35 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { formatCurrency } from "@/utils/globals/money"
-import { Product } from "@/lib/types/business"
 
-interface ProductTableProps {
-  products: Product[]
-  onEdit: (product: Product) => void
-  onDelete: (product: Product) => void
+interface CategoryTableProps {
+  categories: Category[]
+  onEdit: (category: Category) => void
+  onDelete: (category: Category) => void
 }
 
-export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) {
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = React.useState({})
+export function CategoryTable({
+  categories,
+  onEdit,
+  onDelete,
+}: CategoryTableProps) {
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [rowSelection, setRowSelection] = useState({})
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  const columns: ColumnDef<Product>[] = [
+  const columns: ColumnDef<Category>[] = [
     {
-      accessorKey: "name",
+      accessorKey: 'name',
       header: ({ column }) => {
         return (
           <Button
             variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="h-8 flex items-center gap-1"
           >
             Nome
             <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -66,125 +74,48 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
       },
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Package className="h-4 w-4 text-muted-foreground" />
-          <div>
-            <div className="font-medium">{row.getValue("name")}</div>
-            {row.original.description && (
-              <div className="text-sm text-muted-foreground truncate max-w-[200px]">
-                {row.original.description}
-              </div>
-            )}
-          </div>
+          {row.original.color && (
+            <div
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: row.original.color }}
+            />
+          )}
+          <span className="font-medium">{row.getValue('name')}</span>
         </div>
       ),
     },
     {
-      accessorKey: "cost_price",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Preço de Custo
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        )
-      },
-      cell: ({ row }) => {
-        const amount = parseFloat(row.getValue("cost_price"))
-        return <div className="font-medium">{formatCurrency(amount)}</div>
-      },
+      accessorKey: 'description',
+      header: 'Descrição',
+      cell: ({ row }) => (
+        <span className="text-gray-600">
+          {row.getValue('description') || '-'}
+        </span>
+      ),
     },
     {
-      accessorKey: "sale_price",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Preço de Venda
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        )
-      },
-      cell: ({ row }) => {
-        const amount = parseFloat(row.getValue("sale_price"))
-        return <div className="font-medium">{formatCurrency(amount)}</div>
-      },
+      accessorKey: 'active',
+      header: 'Status',
+      cell: ({ row }) => (
+        <Badge variant={row.getValue('active') ? 'default' : 'secondary'}>
+          {row.getValue('active') ? 'Ativa' : 'Inativa'}
+        </Badge>
+      ),
     },
     {
-      accessorKey: "category",
-      header: "Categoria",
-      cell: ({ row }) => {
-        const category = row.original.category
-        if (!category) {
-          return <span className="text-gray-500">Sem categoria</span>
-        }
-        return (
-          <div className="flex items-center gap-2">
-            {category.color && (
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: category.color }}
-              />
-            )}
-            <span>{category.name}</span>
-          </div>
-        )
-      },
-    },
-    {
-      accessorKey: "stock_quantity",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Estoque
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        )
-      },
-      cell: ({ row }) => {
-        const quantity = row.getValue("stock_quantity") as number
-        const movesStock = row.original.moves_stock
-        
-        if (!movesStock) {
-          return <Badge variant="secondary">Não controla</Badge>
-        }
-        
-        return (
-          <div className="flex items-center gap-2">
-            <span className="font-medium">{quantity}</span>
-            {quantity < 10 && (
-              <Badge variant="destructive" className="text-xs">
-                Baixo
-              </Badge>
-            )}
-          </div>
-        )
-      },
-    },
-    {
-      accessorKey: "moves_stock",
-      header: "Controla Estoque",
-      cell: ({ row }) => {
-        const movesStock = row.getValue("moves_stock") as boolean
-        return (
-          <Badge variant={movesStock ? "default" : "secondary"}>
-            {movesStock ? "Sim" : "Não"}
-          </Badge>
-        )
-      },
+      accessorKey: 'created_at',
+      header: 'Criada em',
+      cell: ({ row }) => (
+        <span className="text-gray-600">
+          {new Date(row.getValue('created_at')).toLocaleDateString('pt-BR')}
+        </span>
+      ),
     },
     {
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => {
-        const product = row.original
+        const category = row.original
 
         return (
           <DropdownMenu>
@@ -196,15 +127,15 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Ações</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => onEdit(product)}>
-                Editar produto
+              <DropdownMenuItem onClick={() => onEdit(category)}>
+                Editar categoria
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
-                onClick={() => onDelete(product)}
+                onClick={() => onDelete(category)}
                 className="text-red-600"
               >
-                Excluir produto
+                Excluir categoria
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -214,7 +145,7 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
   ]
 
   const table = useReactTable({
-    data: products,
+    data: categories,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -229,7 +160,7 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
       columnFilters,
       columnVisibility,
       rowSelection,
-    },
+    },  
   })
 
   return (
@@ -238,14 +169,14 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
         <div className="flex-1">
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar produtos..."
-              value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-              onChange={(event) =>
-                table.getColumn("name")?.setFilterValue(event.target.value)
-              }
-              className="pl-8"
-            />
+              <Input
+                placeholder="Buscar categoria..."
+                value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+                onChange={(event) =>
+                  table.getColumn("name")?.setFilterValue(event.target.value)
+                }
+                className="pl-8"
+              />
           </div>
         </div>
         <DropdownMenu>
@@ -268,16 +199,17 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
                       column.toggleVisibility(!!value)
                     }
                   >
-                    {column.id === "cost_price" && "Preço de Custo"}
-                    {column.id === "sale_price" && "Preço de Venda"}
-                    {column.id === "stock_quantity" && "Estoque"}
-                    {column.id === "moves_stock" && "Controla Estoque"}
+                    {column.id === "name" && "Nome"}
+                    {column.id === "description" && "Descrição"}
+                    {column.id === "active" && "Status"}
+                    {column.id === "created_at" && "Criada em"}
                   </DropdownMenuCheckboxItem>
                 )
               })}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -321,7 +253,7 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  Nenhum produto encontrado.
+                  Nenhuma categoria encontrada.
                 </TableCell>
               </TableRow>
             )}
@@ -354,4 +286,4 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
       </div>
     </div>
   )
-} 
+}

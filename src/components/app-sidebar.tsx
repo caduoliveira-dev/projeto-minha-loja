@@ -19,7 +19,18 @@ import { userService } from "@/lib/services"
 const navMain = [
   {
     title: "Produtos",
-    url: "/products",
+    url: "#",
+    isActive: true,
+    items: [
+      {
+        title: "Lista de Produtos",
+        url: "/products",
+      },
+      {
+        title: "Categorias",
+        url: "/products/categories",
+      },
+    ],
   },
   {
     title: "Vendas",

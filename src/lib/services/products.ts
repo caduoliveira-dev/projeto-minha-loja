@@ -89,7 +89,10 @@ export class ProductService extends BaseService {
     
     let query = supabase
       .from('products')
-      .select('*')
+      .select(`
+        *,
+        category:categories(id, name, color)
+      `)
       .eq('active', true) // Apenas produtos ativos
       .order('created_at', { ascending: false })
 
