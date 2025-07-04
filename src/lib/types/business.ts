@@ -238,7 +238,10 @@ export interface FinancialSummary {
 export interface ProductFilters {
   search?: string
   moves_stock?: boolean
+  moves_stock_list?: boolean[]
   low_stock?: boolean
+  category_ids?: string[]
+  active?: boolean
 }
 
 export interface SaleFilters {

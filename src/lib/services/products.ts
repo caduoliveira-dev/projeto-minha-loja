@@ -107,16 +107,30 @@ export class ProductService extends BaseService {
     let query = supabase
       .from('products')
       .select('*')
-      .eq('active', true)
       .order('created_at', { ascending: false })
 
-    // Aplicar filtros
+    // Filtro de ativos/inativos
+    if (filters.active !== undefined) {
+      query = query.eq('active', filters.active)
+    } else {
+      query = query.eq('active', true)
+    }
+
+    // Filtro de busca
     if (filters.search) {
       query = query.ilike('name', `%${filters.search}%`)
     }
-    if (filters.moves_stock !== undefined) {
+    // Filtro de controle de estoque (multi)
+    if (filters.moves_stock_list && filters.moves_stock_list.length > 0) {
+      query = query.in('moves_stock', filters.moves_stock_list)
+    } else if (filters.moves_stock !== undefined) {
       query = query.eq('moves_stock', filters.moves_stock)
     }
+    // Filtro de categorias (multi)
+    if (filters.category_ids && filters.category_ids.length > 0) {
+      query = query.in('category_id', filters.category_ids)
+    }
+    // Filtro de baixo estoque
     if (filters.low_stock) {
       query = query.lt('stock_quantity', 10)
     }
