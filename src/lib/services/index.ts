@@ -9,6 +9,7 @@ export { CustomerService } from './customers'
 export { SaleService } from './sales'
 export { DashboardService } from './dashboard'
 export { UserService } from './user'
+export { paymentMethodService } from './payment-methods'
 
 // =====================================================
 // INSTÂNCIAS PRÉ-CONFIGURADAS DOS SERVIÇOS
@@ -20,6 +21,7 @@ import { CustomerService } from './customers'
 import { SaleService } from './sales'
 import { DashboardService } from './dashboard'
 import { UserService } from './user'
+import { paymentMethodService } from './payment-methods'
 
 // Instâncias singleton dos serviços
 export const productService = new ProductService()

@@ -19,13 +19,9 @@ import { userService } from "@/lib/services"
 const navMain = [
   {
     title: "Produtos",
-    url: "#",
+    url: "/products",
     isActive: true,
     items: [
-      {
-        title: "Lista de Produtos",
-        url: "/products",
-      },
       {
         title: "Categorias",
         url: "/products/categories",
@@ -35,6 +31,13 @@ const navMain = [
   {
     title: "Vendas",
     url: "/sales",
+    isActive: true,
+    items: [
+      {
+        title: "Nova Venda",
+        url: "/sales/new",
+      },
+    ],
   },
   {
     title: "Clientes",
@@ -52,6 +55,10 @@ const navMain = [
       {
         title: "Contas a Receber",
         url: "/financial/receivables",
+      },
+      {
+        title: "Formas de Pagamento",
+        url: "/payment-methods",
       }
     ],
   },
@@ -78,7 +85,7 @@ export async function AppSidebar({ ...props }: React.ComponentProps<typeof Sideb
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+              <a href="/dashboard">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                   <Command className="size-4" />
                 </div>

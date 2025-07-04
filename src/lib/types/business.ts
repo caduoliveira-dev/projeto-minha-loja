@@ -281,4 +281,40 @@ export interface PaginatedResponse<T> {
   page: number
   limit: number
   totalPages: number
+}
+
+// Tipos para Formas de Pagamento
+export interface PaymentMethod {
+  id: string
+  name: string
+  type: 'cash' | 'credit' | 'debit' | 'pix' | 'transfer' | 'check' | 'other'
+  payment_type: 'immediate' | 'installment' // a vista ou a prazo
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface SalePayment {
+  id: string
+  sale_id: string
+  payment_method_id: string
+  payment_method_name: string
+  amount: number
+  installments?: number
+  installment_value?: number
+  due_date?: string
+  created_at: string
+}
+
+export interface CreatePaymentMethodData {
+  name: string
+  type: 'cash' | 'credit' | 'debit' | 'pix' | 'transfer' | 'check' | 'other'
+  payment_type: 'immediate' | 'installment'
+}
+
+export interface CreateSalePaymentData {
+  payment_method_id: string
+  amount: number
+  installments?: number
+  due_date?: string
 } 
